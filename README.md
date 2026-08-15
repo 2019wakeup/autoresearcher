@@ -21,6 +21,9 @@ autoresearcher/
 
 ## 快速开始（本地开发）
 
+> 推荐用 Makefile 一键操作：`make setup && make test && make smoke`（详见各小节）。
+
+
 ### 1. 后端 API
 
 ```bash

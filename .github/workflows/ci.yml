@@ -7,10 +7,9 @@ name: autoresearcher-ci
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
-  push:
-    tags: ['v*']
 
 jobs:
   test:

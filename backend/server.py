@@ -38,6 +38,8 @@ DSH_BIN = os.environ.get("DSH_BIN", "dsh")
 DSH_PROFILE = os.environ.get("DSH_PROFILE", "headless")
 # DRY_RUN=1：不依赖 dsh，用假任务进程测通 API 全链路（CI/本地冒烟用）
 DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
+# SERVE_FRONTEND=1：同时托管前端构建产物（../frontend/dist），单进程本地开发/部署
+SERVE_FRONTEND = os.environ.get("SERVE_FRONTEND", "0") == "1"
 
 # 内存任务表：taskId -> {status, proc, createdAt}
 tasks: dict[str, dict] = {}

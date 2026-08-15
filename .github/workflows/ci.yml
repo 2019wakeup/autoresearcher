@@ -1,6 +1,6 @@
 # .github/workflows/ci.yml —— AutoResearcher CI
 # 两层门禁：
-#   test  ：插件单测 + 前端构建 + 后端编译 + 端到端冒烟（DRY_RUN，无需 dsh）
+#   test  ：插件单测 + 前端构建 + 后端 pytest + 端到端冒烟（DRY_RUN，无需 dsh）
 #   eval  ：评测集门禁（需 DEEPSEEK_API_KEY 与 dsh；tag 或手动触发时运行）
 name: autoresearcher-ci
 
@@ -25,6 +25,12 @@ jobs:
         with:
           python-version: '3.12'
 
+      # 0. Python 依赖（venv，供 pytest 与冒烟使用）
+      - name: python deps
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r backend/requirements.txt pytest httpx
+
       # 1. 插件单测（工具契约 + 安全边界）
       - name: plugin unit tests
         working-directory: plugin
@@ -32,23 +38,20 @@ jobs:
           npm ci
           npm test
 
-      # 2. 前端构建（类型检查 + 产物）
+      # 2. 前端构建（产物 + 编译验证）
       - name: frontend build
         working-directory: frontend
         run: |
           npm ci
           npm run build
 
-      # 3. 后端编译检查
-      - name: backend compile check
-        working-directory: backend
-        run: python -m compileall -q server.py
+      # 3. 后端 API 测试（TestClient + DRY_RUN，真实任务进程）
+      - name: backend api tests
+        run: .venv/bin/python -m pytest backend/test_api.py -q
 
-      # 4. 端到端冒烟（DRY_RUN 模式，无需 dsh）
+      # 4. 端到端冒烟（DRY_RUN 模式）
       - name: api smoke test
         run: |
-          python -m venv .venv
-          .venv/bin/pip install -q -r backend/requirements.txt
           DRY_RUN=1 API_TOKEN=ci-token .venv/bin/python backend/server.py > /tmp/ar.log 2>&1 &
           sleep 3
           API_TOKEN=ci-token node scripts/smoke.mjs
@@ -70,9 +73,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
 
       # 评测门禁：模型升级 / 发布前必须跑（通过率 >= 90% 否则退出码非零）
       - name: eval gate

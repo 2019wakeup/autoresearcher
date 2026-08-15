@@ -13,6 +13,7 @@ test:             ## 插件单测 + 后端编译检查
 	cd plugin && npm test
 	.venv/bin/python -m compileall -q backend/server.py
 	node --check evals/run-evals.mjs
+	.venv/bin/python -m pytest backend/test_api.py -q
 	node --check scripts/double-review.mjs
 	bash -n data/scripts/demo.sh data/scripts/slow.sh
 

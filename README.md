@@ -143,6 +143,8 @@ node scripts/double-review.mjs "审查 src/ 下最近的改动"
 - [ ] 评测集扩充（真实科研任务样例）
 
 ## 相关文档
+- 架构文档：\`docs/ARCHITECTURE.md\`（组件图/数据流/扩展指南）
+- 运维手册：\`docs/OPERATIONS.md\`（备份/成本/升级/排障/安全）
 
 - 配套教程：`../agent-blog/04-实战-科研Agent项目.md`（架构决策与逐章节说明）
 - DSH 官方仓库：<https://github.com/deepseek-ai/dsh>

@@ -1,0 +1,15 @@
+# 构建上下文排除（大幅减小传输体积）
+.git
+.venv
+**/node_modules
+**/dist
+**/.npm-cache
+**/__pycache__
+.pytest_cache
+data/tasks
+data/logs
+data/results
+data/papers
+data/ledger.json
+.env
+*.pyc

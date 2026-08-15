@@ -58,6 +58,10 @@ npm run build         # 产出 dist/
 
 ```bash
 cd evals
+
+> 评测自定义工具（literature_survey 等）需先装配：`make setup-agent`（构建插件 → 装入 profile → 安装预设），
+> 然后 `DSH_PROFILE=autoresearcher DEEPSEEK_API_KEY=xxx node evals/run-evals.mjs`。
+
 DEEPSEEK_API_KEY=xxx node run-evals.mjs   # 通过率 ≥ 90% 才 exit 0
 ```
 

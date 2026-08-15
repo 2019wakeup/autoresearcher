@@ -28,6 +28,9 @@ smoke:            ## 端到端冒烟（DRY_RUN 模式，无需 dsh）
 	API_TOKEN=dev-token node scripts/smoke.mjs; EXIT=$$?; \
 	kill $$(cat /tmp/ar-server.pid) 2>/dev/null; exit $$EXIT
 
+setup-agent:     ## 一键装配（构建插件 + 装入 profile + 安装预设，需已装 dsh）
+	node scripts/setup-agent.mjs
+
 eval:             ## 评测门禁（需要 DEEPSEEK_API_KEY 与 dsh）
 	DEEPSEEK_API_KEY=$${DEEPSEEK_API_KEY:?请设置 DEEPSEEK_API_KEY} node evals/run-evals.mjs
 

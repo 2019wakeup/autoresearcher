@@ -6,9 +6,13 @@ import { execSync } from 'node:child_process'
 const manifest = JSON.parse(readFileSync('evals/manifest.json', 'utf8'))
 console.log('评测集 v' + manifest.schemaVersion + '，共 ' + manifest.cases.length + ' 个用例')
 
-// 辅助 1：跑一次 headless 任务（隔离、可重复）
+// 目标 profile：默认 headless；评测自定义工具（literature_survey 等）时
+// 用 DSH_PROFILE=autoresearcher（需先运行 make setup-agent 装配插件与预设）
+const PROFILE = process.env.DSH_PROFILE ?? 'headless'
+
+// 辅助 1：跑一次隔离任务（可重复）
 function runHeadless(task) {
-  return execSync('dsh --profile headless "' + task + '"', {
+  return execSync('dsh --profile ' + PROFILE + ' "' + task + '"', {
     encoding: 'utf8', timeout: 120_000, maxBuffer: 16 * 1024 * 1024,
   })
 }

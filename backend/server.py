@@ -41,8 +41,54 @@ DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
 # SERVE_FRONTEND=1：同时托管前端构建产物（../frontend/dist），单进程本地开发/部署
 SERVE_FRONTEND = os.environ.get("SERVE_FRONTEND", "0") == "1"
 
-# 内存任务表：taskId -> {status, proc, createdAt}
-tasks: dict[str, dict] = {}
+# 任务表：taskId -> {status, proc, createdAt, doneAt?}
+# 持久化到 data/tasks/index.json：重启后历史任务仍可查询（proc 无法恢复，
+# 未完成的任务标记为 interrupted）
+TASK_INDEX = TASK_DIR / "index.json"
+
+
+class _DoneProc:
+    """恢复任务的假进程句柄：poll() 恒返回已退出。"""
+
+    def poll(self) -> int:
+        return 0
+
+
+def load_task_index() -> dict[str, dict]:
+    """启动时恢复任务历史（磁盘 → 内存）。"""
+    restored: dict[str, dict] = {}
+    if TASK_INDEX.exists():
+        try:
+            raw = json.loads(TASK_INDEX.read_text(encoding="utf-8"))
+            for tid, meta in raw.items():
+                if meta.get("doneAt"):
+                    restored[tid] = {
+                        "status": "done", "proc": _DoneProc(),
+                        "createdAt": meta["createdAt"], "doneAt": meta["doneAt"],
+                        "resultSaved": meta.get("resultSaved", False),
+                    }
+                else:
+                    restored[tid] = {
+                        "status": "interrupted", "proc": _DoneProc(),
+                        "createdAt": meta["createdAt"],
+                    }
+        except (json.JSONDecodeError, OSError):
+            pass  # 索引损坏则从空开始
+    return restored
+
+
+def save_task_index(tasks_map: dict[str, dict]) -> None:
+    """任务表 → 磁盘（不含 proc 句柄）。"""
+    payload = {
+        tid: {k: v for k, v in meta.items() if k != "proc"}
+        for tid, meta in tasks_map.items()
+    }
+    tmp = TASK_INDEX.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    tmp.replace(TASK_INDEX)
+
+
+tasks: dict[str, dict] = load_task_index()
 
 
 def auth(authorization: str | None = Header(default=None)):
@@ -60,6 +106,8 @@ def _collect_result(task_id: str, proc: subprocess.Popen, log_path: Path) -> Non
     """
     proc.wait()
     tasks[task_id]["status"] = "done"
+    tasks[task_id]["doneAt"] = time.time()
+    save_task_index(tasks)
     text = log_path.read_text(errors="ignore")
     start, end = text.find("{"), text.rfind("}")
     if 0 <= start < end:
@@ -111,6 +159,7 @@ def create_task(req: TaskRequest):
         stderr=subprocess.STDOUT,
     )
     tasks[task_id] = {"status": "running", "proc": proc, "createdAt": time.time()}
+    save_task_index(tasks)
     # 后台等待：进程退出后解析结果 JSON（若输出含 JSON 块）并落盘
     threading.Thread(
         target=_collect_result, args=(task_id, proc, log_path), daemon=True,

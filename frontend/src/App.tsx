@@ -39,6 +39,44 @@ export default function App() {
     return () => { if (wsCleanup.current) { wsCleanup.current(); wsCleanup.current = null } }
   }, [currentId])
 
+  // 结果渲染：带 issues[] 的评审报告按严重度彩色列表，其余显示原始 JSON
+  const renderResult = (raw: string) => {
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed.issues)) {
+        const colors: Record<string, string> = {
+          critical: '#c0392b', warning: '#e67e22', info: '#2980b9',
+        }
+        return (
+          <div>
+            <p style={{ fontSize: 12 }}>
+              共 {parsed.issueCount ?? parsed.issues.length} 个问题 ·
+              结论: {parsed.verdict ?? 'n/a'}
+            </p>
+            <ul style={{ paddingLeft: 20, fontSize: 13 }}>
+              {parsed.issues.map((it: any, i: number) => (
+                <li key={i} style={{ marginBottom: 6 }}>
+                  <span style={{
+                    color: colors[it.severity] ?? '#333',
+                    fontWeight: 'bold',
+                  }}>
+                    [{it.severity}]
+                  </span>{' '}
+                  {it.file && <code>{it.file}</code>}
+                  {it.line ? (':' + it.line) : ''} — {it.reason}
+                  {it.note && <em style={{ color: '#888' }}>（{it.note}）</em>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      }
+      return <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>{raw}</pre>
+    } catch {
+      return <pre style={{ fontSize: 12, whiteSpace: 'pre-wrap' }}>{raw}</pre>
+    }
+  }
+
   const submit = async () => {
     if (!taskInput.trim()) return
     setError(null)
@@ -101,12 +139,12 @@ export default function App() {
           {currentId ? '结构化结果' : ''}
         </h2>
         {result && (
-          <pre style={{
-            height: 200, overflow: 'auto', background: '#f5f5f5',
-            padding: 12, borderRadius: 6, fontSize: 12,
+          <div style={{
+            maxHeight: 300, overflow: 'auto', background: '#f5f5f5',
+            padding: 12, borderRadius: 6,
           }}>
-            {result}
-          </pre>
+            {renderResult(result)}
+          </div>
         )}
       </div>
     </div>

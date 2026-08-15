@@ -94,3 +94,28 @@ def test_list_tasks(client):
     r = client.get("/api/tasks", headers=auth_headers())
     assert r.status_code == 200
     assert isinstance(r.json(), list)
+
+
+def test_task_index_persists_after_restart(client):
+    """模拟重启：完成的任务应在索引中恢复为 done。"""
+    r = client.post("/api/tasks", headers=auth_headers(),
+                    json={"task": "持久化测试任务"})
+    task_id = r.json()["taskId"]
+    for _ in range(20):
+        time.sleep(0.3)
+        d = client.get("/api/tasks/" + task_id, headers=auth_headers())
+        if d.json()["status"] == "done":
+            break
+    # 模拟重启：从磁盘重新加载索引
+    restored = server.load_task_index()
+    assert task_id in restored
+    assert restored[task_id]["status"] == "done"
+    assert restored[task_id]["doneAt"] > 0
+
+
+def test_index_corrupt_recovers(client):
+    """索引损坏时启动不崩溃（回到空历史）。"""
+    corrupt = server.TASK_INDEX
+    corrupt.write_text("{broken json", encoding="utf-8")
+    restored = server.load_task_index()
+    assert isinstance(restored, dict)

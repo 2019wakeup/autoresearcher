@@ -84,9 +84,13 @@ export function decide(
   return { allowed: true }
 }
 
-/** 解析 nvidia-smi 输出行："1234 / 24576 MiB" → 1234 */
+/** 解析 nvidia-smi 输出行（used/total）→ 已用显存 MB
+ *  支持两种真实格式：
+ *    nvidia-smi 表格： "1234 / 24576 MiB"
+ *    csv,noheader,nounits： "1234, 24576"
+ */
 export function parseGpuLine(line: string): number | null {
-  const m = line.match(/(\d+)\s*\/\s*(\d+)/)
+  const m = line.match(/(\d+)\s*(?:\/|,)\s*(\d+)/)
   if (!m) return null
   return Number(m[1])
 }

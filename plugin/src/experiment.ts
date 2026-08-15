@@ -43,8 +43,8 @@ export function runExperimentScript(
   // ── 资源熔断：预算账本 + GPU/磁盘预检（科研场景硬约束） ──
   const ledger = loadLedger()
   const preflight = {
-    freeDiskMb: probeFreeDiskMb(),
-    freeGpuMb: probeFreeGpuMb(),
+    freeDiskMb: probeFreeDiskMb() ?? undefined,
+    freeGpuMb: probeFreeGpuMb() ?? undefined,
   }
   const verdict = decide(ledger, limits, preflight)
   if (!verdict.allowed) {

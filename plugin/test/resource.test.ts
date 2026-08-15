@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterAll } from 'vitest'
 import {
   decide, loadLedger, saveLedger, today, parseGpuLine, parseDfLine,
   DEFAULT_LIMITS, Ledger,
@@ -79,7 +79,7 @@ describe('账本读写与跨天滚动', () => {
 describe('解析函数', () => {
   it('解析 nvidia-smi 行（used/total）', () => {
     expect(parseGpuLine('1234 / 24576 MiB')).toBe(1234)
-    expect(parseGpuLine('  512MiB / 8192MiB')).toBe(512)
+    expect(parseGpuLine('512, 8192')).toBe(512)   // csv,noheader,nounits 格式
   })
 
   it('无法解析时返回 null', () => {

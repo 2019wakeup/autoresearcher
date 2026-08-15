@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { resolve } from 'node:path'
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { runExperimentScript, SCRIPTS_ROOT } from '../src/experiment.js'

@@ -1,6 +1,6 @@
 // AutoResearcher 科研工具插件（Cordis 插件）
 // 在 DSH 的 agent 预设组合中注册为一行：- id: research-tools, name: '@autoresearcher/plugin-research'
-import { Context } from 'cordis'
+import { Context } from '@deepseek-ai/cordis'
 import { searchArxiv } from './arxiv.js'
 import { runExperimentScript } from './experiment.js'
 import { extractPdfText } from './pdf.js'

@@ -1,0 +1,15 @@
+# deploy/Dockerfile.backend —— AutoResearcher 后端镜像
+FROM node:22-slim AS dsh-base
+# DSH 运行时（按官方安装方式；此处以 npx 缓存为例）
+RUN npm install -g @deepseek-ai/dsh
+
+FROM python:3.12-slim
+WORKDIR /app
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/ .
+COPY --from=dsh-base /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=dsh-base /usr/local/bin /usr/local/bin
+ENV DSH_BIN=dsh
+EXPOSE 8000
+CMD ["python", "server.py"]

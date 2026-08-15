@@ -1,0 +1,17 @@
+# deploy/autoresearcher.service —— systemd 备选（不用 Docker 时）
+# 安装：sudo cp autoresearcher.service /etc/systemd/system/ && sudo systemctl daemon-reload
+[Unit]
+Description=AutoResearcher Agent Backend
+After=network.target
+
+[Service]
+User=researcher
+WorkingDirectory=/opt/autoresearcher
+EnvironmentFile=/opt/autoresearcher/.env
+ExecStart=/usr/bin/python3 /opt/autoresearcher/backend/server.py
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

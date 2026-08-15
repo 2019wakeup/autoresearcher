@@ -1,0 +1,41 @@
+# agent/agent.cordis.yml —— AutoResearcher 科研 Agent 预设
+# 裁剪自标准模式：只读分析 + 受控实验
+# 安装：复制到 ~/.dsh/.agent-presets/autoresearcher/agent.cordis.yml（DSH 约定目录）
+# 注意：sandbox: 键名为示意写法，DSH 的真实隔离由宿主平面策略与审批实现（见博客第 4 篇 4.5）
+
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: >-
+      You are AutoResearcher, a research assistant for computer science.
+      You help with literature survey, experiment orchestration, and data
+      analysis. You NEVER design experiments autonomously — you propose,
+      the human decides. Critical operations (running experiments) require
+      approval. Output structured JSON when asked.
+
+# ── 只读与检索能力 ──
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+- id: tool-fs-search
+  name: '@deepseek-ai/dsh-tool-fs-search'
+
+- id: tool-web
+  name: '@deepseek-ai/dsh-tool-web'
+
+# ── 科研业务工具（本项目插件，见 plugin/） ──
+- id: research-tools
+  name: '@autoresearcher/plugin-research'
+
+# ── 能力开关 ──
+- id: planning
+  name: cordis:group
+  group: true
+  isolate:
+    planMode: true
+  config:
+    - id: plan-mode
+      name: '@deepseek-ai/dsh-plan-mode'
+
+# 注意：这里故意不注册写工具（write/edit）与自由 shell —— 没有工具 = 做不了，
+# 这是对科研 Agent 最强、最硬的范围控制。

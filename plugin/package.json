@@ -1,0 +1,22 @@
+{
+  "name": "@autoresearcher/plugin-research",
+  "version": "0.1.0",
+  "description": "AutoResearcher 科研工具插件：arxiv 检索 / 实验运行 / PDF 解析",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "cordis": "^4.0.1",
+    "fast-xml-parser": "^4.5.0",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.8",
+    "@types/node": "^22.10.0"
+  }
+}

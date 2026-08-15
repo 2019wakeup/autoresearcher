@@ -1,0 +1,9 @@
+node_modules/
+dist/
+data/tasks/
+data/logs/
+data/results/
+.env
+__pycache__/
+*.pyc
+.venv/

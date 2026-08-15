@@ -1,0 +1,12 @@
+{
+  "experiment": "mnist-cnn",
+  "total": 5,
+  "critical": 2,
+  "results": [
+    { "id": "r1", "acc": 0.98, "severity": "ok" },
+    { "id": "r2", "acc": 0.97, "severity": "ok" },
+    { "id": "r3", "acc": 0.85, "severity": "warning" },
+    { "id": "r4", "acc": 0.60, "severity": "critical" },
+    { "id": "r5", "acc": 0.55, "severity": "critical" }
+  ]
+}

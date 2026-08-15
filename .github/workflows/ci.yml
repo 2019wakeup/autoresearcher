@@ -1,0 +1,84 @@
+# .github/workflows/ci.yml —— AutoResearcher CI
+# 两层门禁：
+#   test  ：插件单测 + 前端构建 + 后端编译 + 端到端冒烟（DRY_RUN，无需 dsh）
+#   eval  ：评测集门禁（需 DEEPSEEK_API_KEY 与 dsh；tag 或手动触发时运行）
+name: autoresearcher-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 1. 插件单测（工具契约 + 安全边界）
+      - name: plugin unit tests
+        working-directory: plugin
+        run: |
+          npm ci
+          npm test
+
+      # 2. 前端构建（类型检查 + 产物）
+      - name: frontend build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      # 3. 后端编译检查
+      - name: backend compile check
+        working-directory: backend
+        run: python -m compileall -q server.py
+
+      # 4. 端到端冒烟（DRY_RUN 模式，无需 dsh）
+      - name: api smoke test
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -r backend/requirements.txt
+          DRY_RUN=1 API_TOKEN=ci-token .venv/bin/python backend/server.py > /tmp/ar.log 2>&1 &
+          sleep 3
+          API_TOKEN=ci-token node scripts/smoke.mjs
+
+      # 5. 脚本语法
+      - name: script syntax
+        run: |
+          node --check evals/run-evals.mjs
+          node --check scripts/double-review.mjs
+          bash -n data/scripts/demo.sh
+
+  eval:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 评测门禁：模型升级 / 发布前必须跑（通过率 >= 90% 否则退出码非零）
+      - name: eval gate
+        run: |
+          npm install -g @deepseek-ai/dsh
+          node evals/run-evals.mjs
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}

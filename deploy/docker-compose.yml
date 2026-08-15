@@ -1,0 +1,29 @@
+# deploy/docker-compose.yml —— Ubuntu 上的一键部署单元
+# 用法：cd deploy && DEEPSEEK_API_KEY=xxx docker compose up -d --build
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - API_TOKEN=${API_TOKEN:-changeme}
+      - DSH_HOME=/data/dsh
+      - PORT=8000
+    volumes:
+      - ./../data:/app/data            # 任务结果/实验输出持久化
+      - ./../agent:/agent:ro           # 预设只读挂载
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    volumes:
+      - ./../frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

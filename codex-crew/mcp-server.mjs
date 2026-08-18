@@ -47,6 +47,11 @@ function profileFor(tier) {
   return tier === 'pro' ? PROFILE_PRO : PROFILE_FLASH;
 }
 
+/** MCP 工具返回必须包成 content 结构（SDK 契约） */
+function text(obj) {
+  return { content: [{ type: 'text', text: typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2) }] };
+}
+
 // ── MCP 工具 1：派发（阻塞等待完成） ──
 server.registerTool('dsh_run_task', {
   title: 'Run DSH research task (blocking)',
@@ -79,13 +84,13 @@ server.registerTool('dsh_run_task', {
   let result = null;
   try { result = await api('/api/tasks/' + taskId + '/result') } catch { /* 结果未就绪 */ }
 
-  return {
+  return text({
     taskId: taskId,
     status: detail?.status ?? 'unknown',
     tier: t,
     logTail: detail?.logTail?.slice(-1500) ?? '',
     result: result,
-  };
+  });
 });
 
 // ── MCP 工具 2：查询 ──
@@ -94,7 +99,7 @@ server.registerTool('dsh_task_status', {
   description: '查询任务状态与日志尾部',
   inputSchema: { task_id: z.string() },
 }, async ({ task_id }) => {
-  return api('/api/tasks/' + task_id);
+  return text(await api('/api/tasks/' + task_id));
 });
 
 // ── MCP 工具 3：健康检查 ──
@@ -103,7 +108,7 @@ server.registerTool('dsh_health', {
   description: '检查 AutoResearcher 后端是否可用',
   inputSchema: {},
 }, async () => {
-  return api('/api/health');
+  return text(await api('/api/health'));
 });
 
 await server.connect(new StdioServerTransport());

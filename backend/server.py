@@ -245,4 +245,13 @@ async def stream_logs(ws: WebSocket, task_id: str, token: str | None = None):
 if __name__ == "__main__":
     import uvicorn
 
+    if SERVE_FRONTEND:
+        # 单进程模式：后端 API + 前端静态托管（生产仍推荐 Nginx 分离）
+        from fastapi.staticfiles import StaticFiles
+        dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+        if dist.is_dir():
+            app.mount("/", StaticFiles(directory=str(dist), html=True), name="frontend")
+        else:
+            print("[warn] SERVE_FRONTEND=1 但未找到 frontend/dist（先 npm run build）")
+
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "8000")))
